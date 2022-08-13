@@ -1,0 +1,8 @@
+build:
+	docker build -t advanced-spring-boot-demo.jar .
+
+run:
+	docker run -p 8090:8090 advanced-spring-boot-demo.jar
+
+run-background:
+    docker run -p -d 8090:8090 advanced-spring-boot-demo.jar

@@ -1,0 +1,23 @@
+version: '3'
+
+services:
+  app:
+    image: 'advanced-spring-boot-demo:latest'
+    build:
+      context: .
+    ports: ['8090:8090']
+    container_name: app
+    depends_on:
+      - db
+    environment:
+      - SPRING_DATASOURCE_URL=
+      - SPRING_DATASOURCE_USERNAME=
+      - SPRING_DATASOURCE_PASSWORD=
+
+  db:
+    image: 'postgres:13.1-alpine'
+    ports: ['5432:5432']
+    container_name: db
+    environment:
+      - POSTGRES_USER=
+      - POSTGRES_PASSWORD=
