@@ -1,8 +1,20 @@
 build:
-	docker build -t advanced-spring-boot-demo.jar .
+	docker build -t advanced-spring-boot-demo .
 
 run:
-	docker run -p 8090:8090 advanced-spring-boot-demo.jar
+	docker run -p 8090:8090 advanced-spring-boot-demo
 
 run-background:
-    docker run -p -d 8090:8090 advanced-spring-boot-demo.jar
+    docker run -p -d 8090:8090 advanced-spring-boot-demo
+
+docker-compose:
+    docker-compose up
+
+docker-compose background:
+    docker-compose up -d
+
+check docker running containers:
+    docker-compose ps
+
+run-compose-with-env:
+    docker run your-docker-container -e SPRING_PROFILES_ACTIVE='dev' -p 8080:8080
