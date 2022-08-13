@@ -67,10 +67,11 @@ public class UserController {
 
     @PostMapping("/register")
     public ResponseEntity<Map<String, String>> saveUser(@Valid @RequestBody SaveUserDTO request){
-        Role role = roleRepository.findByName("USER");
+        Role role = roleRepository.findByName("USER")
+                .orElseThrow(() -> new CustomNotFoundException("Role not found"));
         boolean testEmail = EmailValidator.testEmailValidator(request.getEmail());
         if(!testEmail){throw new CustomApiException("Please provide a valid email!");}
-        if (userRepository.getUserByEmail(request.getEmail()) != null) {
+        if (userRepository.getUserByEmail(request.getEmail()).isPresent()) {
             throw new CustomApiException("Email Already Exists!");
         }
         User user = new User();
@@ -98,11 +99,11 @@ public class UserController {
     }
     @PostMapping("/add-user-role")
     public ResponseEntity<Object> addUserRole(@RequestBody AddUserRoleDTO reqData){
-        User user  = userRepository.getByUsername(reqData.getUsername());
-        Role role = roleRepository.findByName(reqData.getRoleName());
-        if(user==null || role==null){
-            throw new CustomApiException("User/Role not found, Please Try Again");
-        }
+        User user  = userRepository.getByUsername(reqData.getUsername())
+                .orElseThrow(() -> new CustomApiException("User with this username: " + reqData.getUsername() + " " +
+                        " not found, Please try again"));
+        Role role = roleRepository.findByName(reqData.getRoleName())
+                .orElseThrow(()-> new CustomApiException("Role with this name: " + reqData.getRoleName() + " not found"));
         Object resp = userService.addRoleToUser(user, role);
         return ResponseEntity.ok().body(resp);
     }
@@ -110,7 +111,8 @@ public class UserController {
     @GetMapping("/user")
     public ResponseEntity<User> getUser(){
         User user = userRepository.getByUsername((String)
-                SecurityContextHolder.getContext().getAuthentication().getPrincipal());
+                SecurityContextHolder.getContext().getAuthentication().getPrincipal())
+                .orElseThrow(() -> new CustomApiException("User not found!"));
         return ResponseEntity.ok().body(user);
     }
 
@@ -124,10 +126,9 @@ public class UserController {
 
     @PostMapping(value = "/reset-password", consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Object> resetPassword(@RequestBody ResetPasswordDTO resetPasswordDTO){
-        User user = userRepository.getUserByEmail(resetPasswordDTO.getEmail());
-        if(user==null){
-            throw new CustomNotFoundException("User with this email :" + resetPasswordDTO.getEmail() +" not found!");
-        }
+        User user = userRepository.getUserByEmail(resetPasswordDTO.getEmail())
+                .orElseThrow(() -> new CustomNotFoundException("User with this email :"
+                        + resetPasswordDTO.getEmail() +" not found!"));
         return ResponseEntity.ok().body(userService.resetPassword(user));
     }
 

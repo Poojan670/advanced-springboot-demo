@@ -6,10 +6,13 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.stereotype.Repository;
 
+import javax.swing.text.html.Option;
+import java.util.Optional;
+
 public interface UserProfileRepository extends JpaRepository<UserProfile, Long> {
 
-    UserProfile getUserDetailsById(Long id );
+    Optional<UserProfile> getUserDetailsById(Long id );
 
-    UserProfile getUserProfileByUser(User user);
+    Optional<UserProfile> getUserProfileByUser(User user);
 
 }

@@ -10,7 +10,6 @@ import advanced.com.demo.springboot.backend.userprofile.DTO.UserProfileDTO;
 import advanced.com.demo.springboot.backend.userprofile.model.UserProfile;
 import advanced.com.demo.springboot.backend.userprofile.repository.UserProfileRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -33,10 +32,8 @@ public class UserProfileServiceImpl implements UserProfileService {
     public UserProfile saveUserDetails(UserProfileDTO request) {
         User user = userRepository.getByUsername(
                 (String) SecurityContextHolder.getContext().getAuthentication().getPrincipal()
-        );
-        if(user == null){
-            throw new CustomApiException("User not found!");
-        }
+        )
+                .orElseThrow(()-> new CustomApiException("User not found!"));
         String photo = "";
         if (request.getPhoto() == null) {
             photo = null;
@@ -65,12 +62,10 @@ public class UserProfileServiceImpl implements UserProfileService {
     ) {
         User user = userRepository.getByUsername(
                 (String) SecurityContextHolder.getContext().getAuthentication().getPrincipal()
-        );
-        if(user == null){throw new CustomApiException("User not found!");}
-        UserProfile userProfileDb = userProfileRepository.getUserProfileByUser(user);
-        if(userProfileDb == null){
-            throw new CustomNotFoundException("User Details not found");
-        }
+        )
+                .orElseThrow(() -> new CustomApiException("User not found"));
+        UserProfile userProfileDb = userProfileRepository.getUserProfileByUser(user)
+                .orElseThrow(() -> new CustomNotFoundException("User Details not found"));
 
         if(Objects.nonNull(firstName) && !"".equals(firstName)){
             userProfileDb.setFirstName(firstName);
@@ -103,15 +98,15 @@ public class UserProfileServiceImpl implements UserProfileService {
 
     @Override
     public UserProfile getUserDetail(Long id) {
-        UserProfile userProfile =  userProfileRepository.getUserDetailsById(id);
-        if(userProfile == null) {
-            throw new CustomNotFoundException("User Details with this id: " + id + " not found");
-        }
+        UserProfile userProfile =  userProfileRepository.getUserDetailsById(id)
+                .orElseThrow(() -> new CustomNotFoundException("User Details with this id: " + id + " not found"));
         UserProfile testDetail = userProfileRepository.getUserProfileByUser(
                 userRepository.getByUsername(
                         (String) SecurityContextHolder.getContext().getAuthentication().getPrincipal()
                 )
-        );
+                        .orElseThrow(() -> new CustomApiException("User not found!"))
+        )
+                .orElseThrow(() -> new CustomApiException("User Details not Found"));
         if(testDetail.getUser().getRoles().contains("ADMIN") || userProfile == testDetail){
             return userProfile;
         }else{

@@ -1,5 +1,6 @@
 package advanced.com.demo.springboot.backend.user.service;
 
+import advanced.com.demo.springboot.backend.exception.CustomNotFoundException;
 import advanced.com.demo.springboot.backend.helper.CustomOffsetPagination;
 import advanced.com.demo.springboot.backend.user.model.Role;
 import advanced.com.demo.springboot.backend.user.repository.RoleRepository;
@@ -22,7 +23,8 @@ public class RoleServiceImpl implements RoleService{
 
     @Override
     public Role getRoleByName(String name) {
-        return roleRepository.findByName(name);
+        return roleRepository.findByName(name)
+                .orElseThrow(() -> new CustomNotFoundException("Role with this name: " + name + " not found"));
     }
 
     @Override

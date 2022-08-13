@@ -50,15 +50,15 @@ public class UserServiceImpl implements UserService, UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        User user = userRepository.getByUsername(username);
+        User user = userRepository.getByUsername(username)
+                .orElseThrow(() -> new CustomApiException("user not found in the database"));
         if (user == null){
             log.error("user not found in database");
-            throw new CustomApiException("user not found in the database");
         }else{
             log.info("user found in the database {}", user.getUsername());
         }
         Collection<SimpleGrantedAuthority> authorities = new ArrayList<>();
-        user.getRoles().forEach(role -> {
+        Objects.requireNonNull(user).getRoles().forEach(role -> {
             authorities.add(new SimpleGrantedAuthority(role.getName()));
         });
         return new org.springframework.security.core.userdetails.User(user.getUsername(), user.getPassword(), authorities);
@@ -108,11 +108,8 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     @Override
     public User getUser(String username) {
         log.info("getting user {} the database", username);
-        User user =  userRepository.getByUsername(username);
-        if(user==null){
-            throw new CustomApiException("User with this username: " + username + " not found!");
-        }
-        return user;
+        return userRepository.getByUsername(username)
+                .orElseThrow(() -> new CustomApiException("User with this username: " + username + " not found!"));
     }
 
     @Override
@@ -157,19 +154,13 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     }
 
     public User getUserById(Long id) {
-        User user =  userRepository.getUserById(id);
-        if(user == null ){
-            throw new CustomNotFoundException("User with this id: " + id + " not found");
-        }
-        return user;
+        return userRepository.getUserById(id)
+                .orElseThrow(() -> new CustomNotFoundException("User with this id: " + id + " not found"));
     }
 
     public User getByUsername(String username) {
-        User user =  userRepository.getByUsername(username);
-        if(user==null){
-            throw new CustomNotFoundException("User with this username: " + username + " not found!");
-        }
-        return user;
+        return userRepository.getByUsername(username)
+                .orElseThrow(() -> new CustomNotFoundException("User with this username: " + username + " not found!"));
     }
 
     @Override
@@ -180,20 +171,16 @@ public class UserServiceImpl implements UserService, UserDetailsService {
         if(Objects.nonNull(userinfo.getUsername())
                 && !"".equals(userinfo.getUsername()))
         {
-            User user =  userRepository.getByUsername(userinfo.getUsername());
-            if (user!=null){
-                throw new CustomApiException("User with this username: " + userinfo.getUsername() + " already exists!");
-            }
+            userRepository.getByUsername(userinfo.getUsername())
+                    .orElseThrow(() -> new CustomApiException("User with this username: " + userinfo.getUsername() + " already exists!"));
             UserDB.setUsername(userinfo.getUsername());
         }
 
         if(Objects.nonNull(userinfo.getEmail())
                 && !"".equals(userinfo.getEmail()))
         {
-            User user =  userRepository.getUserByEmail(userinfo.getEmail());
-            if (user!=null){
-                throw new CustomApiException("User with this email: " + userinfo.getEmail() + " already exists!");
-            }
+            User user =  userRepository.getUserByEmail(userinfo.getEmail())
+                    .orElseThrow(() -> new CustomApiException("User with this email: " + userinfo.getEmail() + " already exists!"));
             boolean testEmail = EmailValidator.testEmailValidator(userinfo.getEmail());
             if(!testEmail){
                 throw new CustomApiException("Please provide a valid email!");
@@ -235,7 +222,8 @@ public class UserServiceImpl implements UserService, UserDetailsService {
         }
 
         tokenService.setConfirmedAt(token);
-        User userDb = userRepository.getUserById(confirmationToken.getAppUser().getId());
+        User userDb = userRepository.getUserById(confirmationToken.getAppUser().getId())
+                .orElseThrow(() -> new CustomNotFoundException("User not found!"));
         userDb.setIsActive(true);
         userRepository.save(userDb);
         return JSONResponseHelper.CustomResponse("User Successfully Verified, You can try logging in !");
@@ -259,7 +247,8 @@ public class UserServiceImpl implements UserService, UserDetailsService {
 
         tokenService.setConfirmedAt(token);
 
-        User userDb = userRepository.getUserById(confirmationToken.getAppUser().getId());
+        User userDb = userRepository.getUserById(confirmationToken.getAppUser().getId())
+                .orElseThrow(() -> new CustomNotFoundException("User not found!"));
         userDb.setPassword(passwordEncoder.encode(confirmPassword));
 
         userRepository.save(userDb);

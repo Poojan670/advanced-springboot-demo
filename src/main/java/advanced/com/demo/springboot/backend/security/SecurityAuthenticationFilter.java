@@ -48,7 +48,8 @@ public class SecurityAuthenticationFilter extends UsernamePasswordAuthentication
             String username = userLogin.getUsername();
             String password = userLogin.getPassword();
 
-            advanced.com.demo.springboot.backend.user.model.User user = userRepository.getByUsername(username);
+            advanced.com.demo.springboot.backend.user.model.User user = userRepository.getByUsername(username)
+                    .orElseThrow(() -> new CustomApiException("User with this username not found!"));
             boolean active = user.getIsActive();
             if(!active){
                 throw new CustomApiException("User Not Verified !!!");
