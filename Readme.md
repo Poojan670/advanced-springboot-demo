@@ -1,5 +1,5 @@
 <p align="center">
-  <a href="https://spring.io/projects/spring-boot"><img src="https://www.devopsschool.com/blog/wp-content/uploads/2022/02/spring-boot-logo.png" alt="Spring Boot"></a>
+  <a href="https://spring.io/projects/spring-boot"><img src="https://www.devopsschool.com/blog/wp-content/uploads/2022/02/spring-boot-logo.png" alt="Spring Boot" height="200"></a>
 </p>
 
 <p align="center">
