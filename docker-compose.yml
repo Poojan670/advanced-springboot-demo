@@ -11,8 +11,7 @@ services:
       - dbdata:/var/lib/postgresql/data
     container_name: postgres
     environment:
-      POSTGRES_USER:
-      POSTGRES_PASSWORD:
+      POSTGRES_PASSWORD: poojan12
       PGDATA: /var/lib/postgresql/data
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U postgres" ]
