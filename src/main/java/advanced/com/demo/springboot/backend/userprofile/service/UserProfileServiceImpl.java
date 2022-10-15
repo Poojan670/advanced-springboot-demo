@@ -4,8 +4,10 @@ import advanced.com.demo.springboot.backend.exception.CustomApiException;
 import advanced.com.demo.springboot.backend.exception.CustomNotFoundException;
 import advanced.com.demo.springboot.backend.helper.CustomOffsetPagination;
 import advanced.com.demo.springboot.backend.helper.MediaHelper.FileUploadHelper;
+import advanced.com.demo.springboot.backend.helper.ModelMapperHelper;
 import advanced.com.demo.springboot.backend.user.model.User;
 import advanced.com.demo.springboot.backend.user.repository.UserRepository;
+import advanced.com.demo.springboot.backend.userprofile.DTO.UpdateProfileDTO;
 import advanced.com.demo.springboot.backend.userprofile.DTO.UserProfileDTO;
 import advanced.com.demo.springboot.backend.userprofile.model.UserProfile;
 import advanced.com.demo.springboot.backend.userprofile.repository.UserProfileRepository;
@@ -15,11 +17,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
 
 import javax.transaction.Transactional;
-import java.time.LocalDate;
-import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
@@ -56,10 +55,7 @@ public class UserProfileServiceImpl implements UserProfileService {
     }
 
     @Override
-    public UserProfile updateUserDetails(
-            String firstName, String middleName, String lastName,
-            String address, LocalDate dateOfBirth, MultipartFile photo
-    ) {
+    public UserProfile updateUserDetails(UpdateProfileDTO updateProfileDTO) {
         User user = userRepository.getByUsername(
                 (String) SecurityContextHolder.getContext().getAuthentication().getPrincipal()
         )
@@ -67,32 +63,15 @@ public class UserProfileServiceImpl implements UserProfileService {
         UserProfile userProfileDb = userProfileRepository.getUserProfileByUser(user)
                 .orElseThrow(() -> new CustomNotFoundException("User Details not found"));
 
-        if(Objects.nonNull(firstName) && !"".equals(firstName)){
-            userProfileDb.setFirstName(firstName);
-        }
-        if(Objects.nonNull(middleName) && !"".equals(middleName)){
-            userProfileDb.setMiddleName(middleName);
-        }
-        if(Objects.nonNull(lastName) && !"".equals(lastName)){
-            userProfileDb.setLastName(lastName);
-        }
-        if(Objects.nonNull(address) && !"".equals(address)){
-            userProfileDb.setAddress(address);
-        }
-        if(Objects.nonNull(dateOfBirth)){
-            userProfileDb.setDateOfBirth(dateOfBirth);
-            userProfileDb.setAge(
-                    LocalDate.now().getYear() - dateOfBirth.getYear()
-            );
-        }
         String photo_name = "";
-        if (photo == null) {
+        if (updateProfileDTO.getPhoto() == null) {
             photo_name = userProfileDb.getPhoto();
         } else {
-            photo_name = fileUploadHelper.uploadFile("image", photo.getName(),
-                    photo);
+            photo_name = fileUploadHelper.uploadFile("image", updateProfileDTO.getPhoto().getName(),
+                    updateProfileDTO.getPhoto());
         }
         userProfileDb.setPhoto(photo_name);
+        ModelMapperHelper.mapperHelMapper().map(updateProfileDTO, userProfileDb);
         return userProfileRepository.save(userProfileDb);
     }
 

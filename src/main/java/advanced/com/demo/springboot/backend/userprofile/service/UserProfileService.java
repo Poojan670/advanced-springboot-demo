@@ -1,5 +1,6 @@
 package advanced.com.demo.springboot.backend.userprofile.service;
 
+import advanced.com.demo.springboot.backend.userprofile.DTO.UpdateProfileDTO;
 import advanced.com.demo.springboot.backend.userprofile.DTO.UserProfileDTO;
 import advanced.com.demo.springboot.backend.userprofile.model.UserProfile;
 import org.springframework.data.domain.Page;
@@ -12,8 +13,7 @@ public interface UserProfileService {
     UserProfile saveUserDetails(UserProfileDTO request);
 
     UserProfile updateUserDetails(
-            String firstName, String middleName, String lastName,
-            String address, LocalDate dateOfBirth, MultipartFile photo
+            UpdateProfileDTO updateProfileDTO
     );
 
     UserProfile getUserDetail(Long id);

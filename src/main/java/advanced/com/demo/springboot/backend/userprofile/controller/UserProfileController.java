@@ -1,6 +1,7 @@
 package advanced.com.demo.springboot.backend.userprofile.controller;
 
 import advanced.com.demo.springboot.backend.exception.CustomApiException;
+import advanced.com.demo.springboot.backend.userprofile.DTO.UpdateProfileDTO;
 import advanced.com.demo.springboot.backend.userprofile.DTO.UserProfileDTO;
 import advanced.com.demo.springboot.backend.userprofile.model.UserProfile;
 import advanced.com.demo.springboot.backend.userprofile.service.UserProfileServiceImpl;
@@ -30,13 +31,9 @@ public class UserProfileController {
 
     @PatchMapping(value = "/", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Transactional
-    public ResponseEntity<Object> updateUserDetails(
-            String firstName, String middleName, String lastName,
-            String address, LocalDate dateOfBirth, MultipartFile photo
-    ) throws CustomApiException{
+    public ResponseEntity<Object> updateUserDetails(UpdateProfileDTO updateProfileDTO) throws CustomApiException{
         return ResponseEntity.ok().body(userDetailsService.updateUserDetails(
-                firstName, middleName, lastName,
-                address, dateOfBirth, photo
+                updateProfileDTO
         ));
     }
 

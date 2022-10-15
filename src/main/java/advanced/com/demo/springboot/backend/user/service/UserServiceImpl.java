@@ -2,18 +2,17 @@ package advanced.com.demo.springboot.backend.user.service;
 
 import advanced.com.demo.springboot.backend.exception.CustomApiException;
 import advanced.com.demo.springboot.backend.exception.CustomNotFoundException;
-import advanced.com.demo.springboot.backend.helper.CustomOffsetPagination;
 import advanced.com.demo.springboot.backend.helper.JSONResponseHelper;
 import advanced.com.demo.springboot.backend.helper.email.EmailSender;
 import advanced.com.demo.springboot.backend.helper.email.EmailTemplate;
 import advanced.com.demo.springboot.backend.helper.email.EmailValidator;
+import advanced.com.demo.springboot.backend.helper.token.ConfirmToken;
+import advanced.com.demo.springboot.backend.helper.token.TokenService;
 import advanced.com.demo.springboot.backend.user.DTO.UpdateUserDTO;
 import advanced.com.demo.springboot.backend.user.model.Role;
 import advanced.com.demo.springboot.backend.user.model.User;
 import advanced.com.demo.springboot.backend.user.repository.RoleRepository;
 import advanced.com.demo.springboot.backend.user.repository.UserRepository;
-import advanced.com.demo.springboot.backend.helper.token.ConfirmToken;
-import advanced.com.demo.springboot.backend.helper.token.TokenService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,7 +20,7 @@ import org.springframework.context.annotation.PropertySource;
 import org.springframework.core.env.Environment;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -32,6 +31,10 @@ import org.springframework.stereotype.Service;
 import javax.transaction.Transactional;
 import java.time.LocalDateTime;
 import java.util.*;
+
+import static advanced.com.demo.springboot.backend.helper.PaginateHelper.limitPageable;
+import static advanced.com.demo.springboot.backend.helper.PaginateHelper.pageable;
+import static advanced.com.demo.springboot.backend.user.UserCriteria.*;
 
 @Service
 @RequiredArgsConstructor
@@ -113,44 +116,25 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     }
 
     @Override
-    public Page<User> getUsers(Integer offset,Integer limit, String sortBy,
+    public Page<User> getUsers(Integer offset,
+                               Integer limit,
+                               String sortBy,
                                String search,
-                               String id,String username,String email) {
+                               Long id,
+                               String username,
+                               String email) {
         log.info("getting all users");
-        if (!id.equals("") || !username.equals("") || !email.equals("")) {
-            Pageable pageable;
-            if (sortBy.startsWith("-")) {
-                pageable = new CustomOffsetPagination(offset, limit, Sort.by(sortBy.substring(1)).descending());
-            } else {
-                pageable = new CustomOffsetPagination(offset, limit, Sort.by(sortBy));
-            }
-            if (id.equals("") && username.equals("")) {
-                return userRepository.filter(null, null, email, pageable);
-            } else if (id.equals("") && email.equals("")) {
-                return userRepository.filter(null, username, null, pageable);
-            } else if (username.equals("") && email.equals("")) {
-                return userRepository.filter(Long.valueOf(id), null, null, pageable);
-            } else {
-                return userRepository.filter(Long.valueOf(id), username, email, pageable);
-            }
+        Pageable pageable = pageable(offset, limit,sortBy);
+        if(limit==0){
+            return userRepository.findAll(limitPageable(this.getUsersCount(), sortBy));
         }
-        else if(search==null || search.equals("")){
-            Pageable pageable;
-            if (sortBy.startsWith("-")){
-                pageable = new CustomOffsetPagination(offset, limit, Sort.by(sortBy.substring(1)).descending());
-            }else{
-                pageable = new CustomOffsetPagination(offset, limit, Sort.by(sortBy));
-            }
-            return userRepository.findAll(pageable);
-        }else{
-            Pageable pageable;
-            if (sortBy.startsWith("-")){
-                pageable = new CustomOffsetPagination(offset, limit, Sort.by(sortBy.substring(1)).descending());
-            }else{
-                pageable = new CustomOffsetPagination(offset, limit, Sort.by(sortBy));
-            }
-            return userRepository.search(search, pageable);
-        }
+        return userRepository.findAll(Specification
+                .where(idFilter(id))
+                .and(usernameFilter(username))
+                .and(emailFilter(email))
+                .and(searchUser(search))
+                , pageable);
+
     }
 
     public User getUserById(Long id) {
@@ -227,6 +211,11 @@ public class UserServiceImpl implements UserService, UserDetailsService {
         userDb.setIsActive(true);
         userRepository.save(userDb);
         return JSONResponseHelper.CustomResponse("User Successfully Verified, You can try logging in !");
+    }
+
+    @Override
+    public int getUsersCount() {
+        return userRepository.getUserCount();
     }
 
     @Transactional

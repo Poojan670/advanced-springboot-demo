@@ -18,7 +18,7 @@ public interface UserService {
                         Integer limit,
                         String sortBy,
                         String search,
-                        String id,
+                        Long id,
                         String username,
                         String email);
 
@@ -28,6 +28,8 @@ public interface UserService {
     Object resetPassword(User user);
 
     Object confirmUser(String token);
+
+    int getUsersCount();
 }
 
 

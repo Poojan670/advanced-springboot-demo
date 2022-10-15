@@ -54,11 +54,10 @@ public class UserController {
             @RequestParam(defaultValue = "10") Integer limit,
             @RequestParam(defaultValue = "id") String sortBy,
             @RequestParam(defaultValue = "") String search,
-            @RequestParam(defaultValue = "") Map<String, String> filter
+            @RequestParam(defaultValue = "") Long id,
+            @RequestParam(defaultValue = "") String username,
+            @RequestParam(defaultValue = "") String email
     ){
-        var id = filter.getOrDefault("id", "");
-        var username = filter.getOrDefault("username", "");
-        var email = filter.getOrDefault("email", "");
         return ResponseEntity.ok().body(userService.getUsers(
                 offset, limit, sortBy, search,
                 id, username, email
