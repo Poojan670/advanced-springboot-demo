@@ -2,7 +2,6 @@ package advanced.com.demo.springboot.backend.userprofile.service;
 
 import advanced.com.demo.springboot.backend.exception.CustomApiException;
 import advanced.com.demo.springboot.backend.exception.CustomNotFoundException;
-import advanced.com.demo.springboot.backend.helper.CustomOffsetPagination;
 import advanced.com.demo.springboot.backend.helper.MediaHelper.FileUploadHelper;
 import advanced.com.demo.springboot.backend.helper.ModelMapperHelper;
 import advanced.com.demo.springboot.backend.user.model.User;
@@ -14,11 +13,18 @@ import advanced.com.demo.springboot.backend.userprofile.repository.UserProfileRe
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import javax.persistence.EntityManager;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
 import javax.transaction.Transactional;
+
+import static advanced.com.demo.springboot.backend.helper.PaginateHelper.limitPageable;
+import static advanced.com.demo.springboot.backend.helper.PaginateHelper.pageable;
+import static advanced.com.demo.springboot.backend.helper.utils.UserProfileCriteria.*;
 
 @Service
 @RequiredArgsConstructor
@@ -27,6 +33,12 @@ public class UserProfileServiceImpl implements UserProfileService {
     private final UserProfileRepository userProfileRepository;
     private final FileUploadHelper fileUploadHelper;
     private final UserRepository userRepository;
+    private EntityManager entityManager;
+
+    /**
+     * @param request UserProfileDTO
+     * @return UserProfile
+     */
     @Override
     public UserProfile saveUserDetails(UserProfileDTO request) {
         User user = userRepository.getByUsername(
@@ -54,6 +66,10 @@ public class UserProfileServiceImpl implements UserProfileService {
         return userProfileRepository.save(userProfile);
     }
 
+    /**
+     * @param updateProfileDTO requestObject
+     * @return UpdatedUserProfile
+     */
     @Override
     public UserProfile updateUserDetails(UpdateProfileDTO updateProfileDTO) {
         User user = userRepository.getByUsername(
@@ -75,6 +91,10 @@ public class UserProfileServiceImpl implements UserProfileService {
         return userProfileRepository.save(userProfileDb);
     }
 
+    /**
+     * @param id int8
+     * @return UserProfile
+     */
     @Override
     public UserProfile getUserDetail(Long id) {
         UserProfile userProfile =  userProfileRepository.getUserDetailsById(id)
@@ -93,19 +113,45 @@ public class UserProfileServiceImpl implements UserProfileService {
         }
     }
 
+    /**
+     * @param id int8
+     */
     @Override
     public void deleteUserDetail(Long id) {
         userProfileRepository.delete(this.getUserDetail(id));
     }
 
+    public Integer getUserDetailsCount(){
+        CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
+        CriteriaQuery<Long> criteriaQuery = criteriaBuilder.createQuery(Long.class);
+        criteriaQuery.select(criteriaBuilder.count(criteriaQuery.from(UserProfile.class)));
+        return entityManager.createQuery(criteriaQuery).getSingleResult().intValue();
+    }
+
+    /**
+     * @param offset int
+     * @param limit int
+     * @param sortBy String
+     * @param search String
+     * @param id int8
+     * @param userId int8
+     * @return Paginated ProfileList
+     */
     @Override
-    public Page<UserProfile> getUserDetails(Integer offset, Integer limit, String sortBy, String search) {
-            Pageable pageable;
-            if (sortBy.startsWith("-")){
-                pageable = new CustomOffsetPagination(offset, limit, Sort.by(sortBy.substring(1)).descending());
-            }else{
-                pageable = new CustomOffsetPagination(offset, limit, Sort.by(sortBy));
+    public Page<UserProfile> getUserDetails(Integer offset,
+                                            Integer limit,
+                                            String sortBy,
+                                            String search,
+                                            Long id,
+                                            Long userId) {
+            Pageable pageable = pageable(offset,limit,sortBy);
+            if(limit==0){
+                return userProfileRepository
+                        .findAll(limitPageable(this.getUserDetailsCount(), sortBy));
             }
-            return userProfileRepository.findAll(pageable);
+            return userProfileRepository.findAll(Specification
+                    .where(idFilter(id))
+                    .and(userIdFilter(userId))
+                    .and(searchUserProfile(search)), pageable);
         }
 }

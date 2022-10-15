@@ -11,10 +11,10 @@ insert into "users" ("created_at_ad",
                      "username",
                      "user_id")
 values(null,null,
-       'admin@gmail.com',
+       ${first_superuser_email},
        TRUE,
-       '$2a$10$u9LoR5pZlwl1wXMbJXccOOQLp0NPjGCBM40TrCmV4TkOmNH.efrlO',
-       'admin',
+       ${first_superuser_password},
+       ${first_superuser_username},
        1);
 
 select * from "users" where username='admin';

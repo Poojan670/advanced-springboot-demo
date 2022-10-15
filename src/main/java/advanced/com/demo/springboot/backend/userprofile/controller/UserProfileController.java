@@ -11,11 +11,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
 import javax.transaction.Transactional;
 import javax.validation.Valid;
-import java.time.LocalDate;
 
 @RestController
 @RequiredArgsConstructor
@@ -25,7 +23,7 @@ public class UserProfileController {
 
     @PostMapping(value = "/", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Transactional
-    public ResponseEntity<Object> saveUserDetails(@Valid @RequestBody UserProfileDTO request) throws CustomApiException{
+    public ResponseEntity<UserProfile> saveUserDetails(@Valid @RequestBody UserProfileDTO request) throws CustomApiException{
         return ResponseEntity.ok().body(userDetailsService.saveUserDetails(request));
     }
 
@@ -42,9 +40,12 @@ public class UserProfileController {
             @RequestParam(defaultValue = "0") Integer offset,
             @RequestParam(defaultValue = "10") Integer limit,
             @RequestParam(defaultValue = "id") String sortBy,
-            @RequestParam(defaultValue = "") String search
+            @RequestParam(defaultValue = "") String search,
+            @RequestParam(defaultValue = "") Long id,
+            @RequestParam(defaultValue = "") Long userId
     ) {
-        return ResponseEntity.ok().body(userDetailsService.getUserDetails(offset,limit,sortBy, search));
+        return ResponseEntity.ok().body(userDetailsService.getUserDetails(offset,limit,sortBy,
+                search,id,userId));
     }
 
     @GetMapping("/user-detail/{id}")

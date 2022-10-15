@@ -1,4 +1,4 @@
-package advanced.com.demo.springboot.backend.user;
+package advanced.com.demo.springboot.backend.helper.utils;
 
 import advanced.com.demo.springboot.backend.user.model.User;
 import org.springframework.data.jpa.domain.Specification;

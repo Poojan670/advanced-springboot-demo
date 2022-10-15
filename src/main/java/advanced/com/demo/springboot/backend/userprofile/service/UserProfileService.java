@@ -23,5 +23,8 @@ public interface UserProfileService {
     Page<UserProfile> getUserDetails(Integer offset,
                                      Integer limit,
                                      String sortBy,
-                                     String search);
+                                     String search,
+                                     Long id,
+                                     Long userId);
+
 }

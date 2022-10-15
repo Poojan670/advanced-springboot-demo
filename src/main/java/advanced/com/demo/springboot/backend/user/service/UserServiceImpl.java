@@ -34,7 +34,7 @@ import java.util.*;
 
 import static advanced.com.demo.springboot.backend.helper.PaginateHelper.limitPageable;
 import static advanced.com.demo.springboot.backend.helper.PaginateHelper.pageable;
-import static advanced.com.demo.springboot.backend.user.UserCriteria.*;
+import static advanced.com.demo.springboot.backend.helper.utils.UserCriteria.*;
 
 @Service
 @RequiredArgsConstructor
@@ -51,6 +51,11 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     @Autowired
     private Environment env;
 
+    /**
+     * @param username String
+     * @return Spring's userDetails
+     * @throws UsernameNotFoundException Exception
+     */
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         User user = userRepository.getByUsername(username)
@@ -67,12 +72,22 @@ public class UserServiceImpl implements UserService, UserDetailsService {
         return new org.springframework.security.core.userdetails.User(user.getUsername(), user.getPassword(), authorities);
 
     }
+
+    /**
+     * @param user Object
+     * @return Saved User
+     * @apiNote Save User Directly
+     */
     @Override
     public User saveUser(User user) {
         log.info("saving user {} to the database", user.getUsername());
         return userRepository.save(user);
     }
 
+    /**
+     * @param user Object
+     * @return CustomResponse
+     */
     public Map<String, String> saveUserIntoDB(User user){
 
         User userDb = userRepository.save(user);
@@ -95,12 +110,21 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     }
 
 
+    /**
+     * @param role Object
+     * @return Role
+     */
     @Override
     public Role saveUserRole(Role role) {
         log.info("saving role {} to the database", role.getName());
         return roleRepository.save(role);
     }
 
+    /**
+     * @param user Object
+     * @param role Object
+     * @return Object
+     */
     @Override
     public Object addRoleToUser(User user, Role role) {
         user.getRoles().add(role);
@@ -108,6 +132,10 @@ public class UserServiceImpl implements UserService, UserDetailsService {
         return JSONResponseHelper.CustomResponse("Roles Added");
     }
 
+    /**
+     * @param username String
+     * @return UserObject
+     */
     @Override
     public User getUser(String username) {
         log.info("getting user {} the database", username);
@@ -115,6 +143,16 @@ public class UserServiceImpl implements UserService, UserDetailsService {
                 .orElseThrow(() -> new CustomApiException("User with this username: " + username + " not found!"));
     }
 
+    /**
+     * @param offset int
+     * @param limit int
+     * @param sortBy String
+     * @param search String
+     * @param id int8
+     * @param username String
+     * @param email String
+     * @return Paginated UserList
+     */
     @Override
     public Page<User> getUsers(Integer offset,
                                Integer limit,
@@ -137,16 +175,29 @@ public class UserServiceImpl implements UserService, UserDetailsService {
 
     }
 
+    /**
+     * @param id int8
+     * @return UserObject
+     */
     public User getUserById(Long id) {
         return userRepository.getUserById(id)
                 .orElseThrow(() -> new CustomNotFoundException("User with this id: " + id + " not found"));
     }
 
+    /**
+     * @param username String
+     * @return UserObject
+     */
     public User getByUsername(String username) {
         return userRepository.getByUsername(username)
                 .orElseThrow(() -> new CustomNotFoundException("User with this username: " + username + " not found!"));
     }
 
+    /**
+     * @param UserDB UserObject
+     * @param userinfo UpdateDTO
+     * @return updatedUser
+     */
     @Override
     public User updateUser(User UserDB,
                            UpdateUserDTO userinfo){
@@ -163,7 +214,7 @@ public class UserServiceImpl implements UserService, UserDetailsService {
         if(Objects.nonNull(userinfo.getEmail())
                 && !"".equals(userinfo.getEmail()))
         {
-            User user =  userRepository.getUserByEmail(userinfo.getEmail())
+            userRepository.getUserByEmail(userinfo.getEmail())
                     .orElseThrow(() -> new CustomApiException("User with this email: " + userinfo.getEmail() + " already exists!"));
             boolean testEmail = EmailValidator.testEmailValidator(userinfo.getEmail());
             if(!testEmail){
@@ -175,6 +226,10 @@ public class UserServiceImpl implements UserService, UserDetailsService {
         return userRepository.save(UserDB);
     }
 
+    /**
+     * @param user Object
+     * @return CustomResponse
+     */
     @Override
     public Object resetPassword(User user) {
 
@@ -193,6 +248,10 @@ public class UserServiceImpl implements UserService, UserDetailsService {
         return JSONResponseHelper.CustomResponse("Password Reset Email Sent Successfully to your email");
     }
 
+    /**
+     * @param token String
+     * @return CustomResponse
+     */
     @Override
     public Object confirmUser(String token) {
         ConfirmToken confirmationToken = tokenService
@@ -213,11 +272,20 @@ public class UserServiceImpl implements UserService, UserDetailsService {
         return JSONResponseHelper.CustomResponse("User Successfully Verified, You can try logging in !");
     }
 
+    /**
+     * @return totalUserCount
+     */
     @Override
     public int getUsersCount() {
         return userRepository.getUserCount();
     }
 
+    /**
+     * @param token String
+     * @param newPassword String
+     * @param confirmPassword String
+     * @return CustomResponse
+     */
     @Transactional
     public Object confirmPassword(String token, String newPassword, String confirmPassword){
         ConfirmToken confirmationToken = tokenService
@@ -245,6 +313,9 @@ public class UserServiceImpl implements UserService, UserDetailsService {
         return JSONResponseHelper.CustomResponse("Password reset successfully!");
     }
 
+    /**
+     * @return Database configs from resource
+     */
     public Boolean getDbConfig(){
         return Boolean.parseBoolean(env.getProperty("spring.flyway.enabled"));
     }

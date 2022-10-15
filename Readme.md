@@ -73,6 +73,14 @@ spring.mail.password=
 spring.mail.properties.mail.smtp.auth=true
 spring.mail.properties.mail.smtp.starttls.enable=true
 
+// Superuser flyway configs
+first_superuser_username=''
+first_superuser_password=''
+first_superuser_email=''
+spring.flyway.placeholders.first_superuser_username=${first_superuser_username}
+spring.flyway.placeholders.first_superuser_password=${first_superuser_password}
+spring.flyway.placeholders.first_superuser_email=${first_superuser_email}
+
 ```
 </div>
 
